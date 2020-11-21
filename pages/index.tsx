@@ -1,11 +1,9 @@
-import Head from 'next/head'
+import Head from "next/head";
 import React from "react";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { v4 as uuidv4 } from "uuid";
 import JsonTree from "react-json-tree";
-import MathJax from "react-mathjax3";
-
-//const ReactJsonView = dynamic(() => import("react-json-view"), { ssr: false });
+import { Button, Spinner } from "react-bootstrap";
 
 const theme = {
   scheme: "twilight",
@@ -42,7 +40,7 @@ function SentenceForm({ handleSentenceUpdate }: SentenceFormProps) {
       }}
     >
       <textarea onChange={(event) => setSentence(event.target.value)} />
-      <input type="submit" value="Submit" />
+      <Button type="submit">Submit</Button>
     </form>
   );
 }
@@ -64,6 +62,9 @@ interface ConstituentTreeViewerProps {
 }
 
 function ConstituentTreeViewer(props: ConstituentTreeViewerProps): JSX.Element {
+  if (!props.constituentTrees) {
+    return <Spinner animation="border" />;
+  }
   return <JsonTree data={props.constituentTrees} theme={theme} />;
 }
 
@@ -73,6 +74,9 @@ interface GrammarViewerProps {
 }
 
 function GrammarViewer(props: GrammarViewerProps): JSX.Element {
+  if (!props.grammars) {
+    return <Spinner animation="border" />;
+  }
   return <JsonTree data={props.grammars} theme={theme} />;
 }
 
@@ -84,6 +88,7 @@ function CCGTreeViewer(props: CCGTreeViewerProps) {
   const [derivations, setState] = React.useState(undefined);
   React.useEffect(() => {
     if (!props.grammar) {
+      setState(undefined);
       return;
     }
     axios
@@ -92,10 +97,16 @@ function CCGTreeViewer(props: CCGTreeViewerProps) {
         setState(response.data.result);
       });
   }, [props.grammar]);
+  if (!derivations) {
+    return <Spinner animation="border" />;
+  }
   return <JsonTree data={derivations} theme={theme} />;
 }
 
-function createRequest(method: string, ...params: any[]): AxiosRequestConfig {
+function createRequest(
+  method: string,
+  ...params: unknown[]
+): AxiosRequestConfig {
   return {
     method: "POST",
     url: "./api/proxy",
@@ -115,7 +126,7 @@ interface AppState {
   sentence?: string;
 }
 
-function App() {
+function App(): JSX.Element {
   const [state, setState] = React.useState<AppState>({
     constituentTrees: undefined,
     grammars: undefined,
@@ -124,6 +135,12 @@ function App() {
   });
   React.useEffect(() => {
     if (!state.sentence) {
+      setState({
+        ...state,
+        constituentTrees: undefined,
+        grammars: undefined,
+        grammar: undefined,
+      });
       return;
     }
     axios
@@ -144,6 +161,7 @@ function App() {
   }, [state.sentence]);
   React.useEffect(() => {
     if (!state.constituentTrees) {
+      setState({ ...state, grammars: undefined, grammar: undefined });
       return;
     }
     axios
@@ -166,7 +184,12 @@ function App() {
       </Head>
       <SentenceForm
         handleSentenceUpdate={(sentence: string) => {
-          setState({ ...state, sentence });
+          setState({
+            sentence,
+            constituentTrees: undefined,
+            grammars: undefined,
+            grammar: undefined,
+          });
         }}
       />
       <ConstituentTreeViewer constituentTrees={state.constituentTrees} />

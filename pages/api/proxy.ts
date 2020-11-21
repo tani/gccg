@@ -1,4 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import type { NextApiRequest, NextApiResponse, NextApiHandler } from "next";
 import axios from "axios";
 
 const route = {
@@ -7,9 +7,17 @@ const route = {
   construct: "http://localhost:8082",
 };
 
-export default async (req: NextApiRequest, res: NextApiResponse) => {
-  const response = await axios.post(route[req.body.method], req.body, {
+async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+): Promise<void> {
+  const response = await axios.request({
+    method: "POST",
+    url: route[req.body.method],
+    data: req.body,
     headers: req.headers,
   });
   res.status(200).json(response.data);
-};
+}
+
+export default handler as NextApiHandler;
