@@ -185,10 +185,8 @@ function App(): JSX.Element {
       <SentenceForm
         handleSentenceUpdate={(sentence: string) => {
           setState({
+            ...state,
             sentence,
-            constituentTrees: undefined,
-            grammars: undefined,
-            grammar: undefined,
           });
         }}
       />
