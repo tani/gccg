@@ -4,6 +4,11 @@ import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { v4 as uuidv4 } from "uuid";
 import JsonTree from "react-json-tree";
 import { Button, Spinner } from "react-bootstrap";
+import {
+  LabeledLabelTree,
+  LabeledTree,
+} from "../lib/labeled_tree";
+import * as MathJax from "mathjax3-react"
 
 const theme = {
   scheme: "twilight",
@@ -45,20 +50,8 @@ function SentenceForm({ handleSentenceUpdate }: SentenceFormProps) {
   );
 }
 
-interface Type {
-  type: "category";
-  label: "right" | "left";
-  children: [Type, Type] | [];
-}
-
-interface Node {
-  type: "node";
-  label: Type;
-  children: [Node, Node] | [];
-}
-
 interface ConstituentTreeViewerProps {
-  constituentTrees?: Node[];
+  constituentTrees?: LabeledTree[];
 }
 
 function ConstituentTreeViewer(props: ConstituentTreeViewerProps): JSX.Element {
@@ -69,8 +62,8 @@ function ConstituentTreeViewer(props: ConstituentTreeViewerProps): JSX.Element {
 }
 
 interface GrammarViewerProps {
-  handleGrammarSelection(grammar: Node[]): void;
-  grammars?: Node[][][];
+  handleGrammarSelection(grammar: LabeledTree[]): void;
+  grammars?: LabeledTree[][][];
 }
 
 function GrammarViewer(props: GrammarViewerProps): JSX.Element {
@@ -81,7 +74,46 @@ function GrammarViewer(props: GrammarViewerProps): JSX.Element {
 }
 
 interface CCGTreeViewerProps {
-  grammar?: Node[];
+  grammar?: LabeledTree[];
+}
+
+function RenderMathJaxSrcCategory(tree: LabeledLabelTree): string {
+  if ("children" in tree) {
+    switch (tree.label) {
+      case "left":
+        return `(${RenderMathJaxSrcCategory(
+          tree.children[0]
+        )}/${RenderMathJaxSrcCategory(tree.children[1])})`;
+      case "right":
+        return `(${RenderMathJaxSrcCategory(
+          tree.children[0]
+        )}\\${RenderMathJaxSrcCategory(tree.children[1])})`;
+    }
+  } else {
+    return tree.label;
+  }
+}
+
+function RendeMathJaxSrcDerivation(tree: LabeledTree): string {
+  if ("children" in tree) {
+    if (tree.children.length === 2) {
+      return `${RendeMathJaxSrcDerivation(
+        tree.children[0]
+      )}${RendeMathJaxSrcDerivation(
+        tree.children[1]
+      )}\\BIC{${RenderMathJaxSrcCategory(tree.label)}}`;
+    } else if (tree.children.length === 1) {
+      return `${RendeMathJaxSrcDerivation(
+        tree.children[0]
+      )}\\BIC{${RenderMathJaxSrcCategory(tree.label)}}`;
+    }
+  } else {
+    return tree.label;
+  }
+}
+
+function renderProoftree(tree: LabeledTree): JSX.Element {
+  return <MathJax.Formula formula={`$$${RendeMathJaxSrcDerivation(tree)}$$`} />
 }
 
 function CCGTreeViewer(props: CCGTreeViewerProps) {
@@ -120,9 +152,9 @@ function createRequest(
 }
 
 interface AppState {
-  constituentTrees?: Node[];
-  grammars?: Node[][][];
-  grammar?: Node[];
+  constituentTrees?: LabeledTree[];
+  grammars?: LabeledTree[][][];
+  grammar?: LabeledTree[];
   sentence?: string;
 }
 
@@ -171,7 +203,7 @@ function App(): JSX.Element {
         )
       )
       .then((responses: AxiosResponse[]) => {
-        const grammars: Node[][][] = responses.map((r) => r.data.result);
+        const grammars: LabeledTree[][][] = responses.map((r) => r.data.result);
         const grammar = grammars[0][0];
         setState({ ...state, grammar, grammars });
       });
@@ -193,7 +225,7 @@ function App(): JSX.Element {
       <ConstituentTreeViewer constituentTrees={state.constituentTrees} />
       <GrammarViewer
         grammars={state.grammars}
-        handleGrammarSelection={(grammar: Node[]) => {
+        handleGrammarSelection={(grammar: LabeledTree[]) => {
           setState({ ...state, grammar });
         }}
       />

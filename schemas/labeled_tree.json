@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Labeled Tree",
+  "definitions": {
+    "labeled_label_node": {
+      "title": "Labeled Label Node",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "children"],
+      "properties": {
+        "label": {
+          "oneOf": [
+            {
+              "enum": ["right"]
+            },
+            {
+              "enum": ["left"]
+            }
+          ]
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/labeled_label_tree"
+          }
+        }
+      }
+    },
+    "labeled_label_leaf": {
+      "title": "Label Label Leaf",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label"],
+      "properties": {
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+    "labeled_label_tree": {
+      "tittle": "Labeled Label Tree",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/labeled_label_node"
+        },
+        {
+          "$ref": "#/definitions/labeled_label_leaf"
+        }
+      ]
+    },
+    "labeled_node": {
+      "title": "Labeled Node",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "children"],
+      "properties": {
+        "label": {
+          "$ref": "#/definitions/labeled_label_tree"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#"
+          }
+        }
+      }
+    },
+    "labeled_leaf": {
+      "title": "Labeled Leaf",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label"],
+      "properties": {
+        "label": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/definitions/labeled_node"
+    },
+    {
+      "$ref": "#/definitions/labeled_leaf"
+    }
+  ]
+}
