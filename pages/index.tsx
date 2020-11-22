@@ -1,14 +1,24 @@
 import Head from "next/head";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { v4 as uuidv4 } from "uuid";
 import JsonTree from "react-json-tree";
 import { Button, Spinner } from "react-bootstrap";
-import {
-  LabeledLabelTree,
-  LabeledTree,
-} from "../lib/labeled_tree";
-import * as MathJax from "mathjax3-react"
+import { LabeledLabelTree, LabeledTree } from "../lib/labeled_tree";
+import { mathjax } from "mathjax-full/js/mathjax";
+import { TeX } from "mathjax-full/js/input/tex";
+import { SVG } from "mathjax-full/js/output/svg";
+import { liteAdaptor } from "mathjax-full/js/adaptors/liteAdaptor";
+import { RegisterHTMLHandler } from "mathjax-full/js/handlers/html";
+import { AllPackages } from "mathjax-full/js/input/tex/AllPackages";
+import { LiteElement } from "mathjax-full/js/adaptors/lite/Element";
+import Graph from "react-graph-vis";
+import hash from "object-hash";
+const adaptor = liteAdaptor();
+RegisterHTMLHandler(adaptor);
+const tex = new TeX({ packages: AllPackages });
+const svg = new SVG({ fontCache: "none" });
+const mathDocument = mathjax.document("", { InputJax: tex, OutputJax: svg });
 
 const theme = {
   scheme: "twilight",
@@ -36,7 +46,7 @@ interface SentenceFormProps {
 }
 
 function SentenceForm({ handleSentenceUpdate }: SentenceFormProps) {
-  const [sentence, setSentence] = React.useState("");
+  const [sentence, setSentence] = useState("");
   return (
     <form
       onSubmit={(event) => {
@@ -54,11 +64,35 @@ interface ConstituentTreeViewerProps {
   constituentTrees?: LabeledTree[];
 }
 
+function createEdges(tree: LabeledTree): {from: string, to: string}[] {
+  if ("children" in tree) {
+    const edges = tree.children.map(child=>{
+      return {from: hash(tree), to: hash(child)}
+    })
+    return edges.concat(...tree.children.map(child=>createEdges(child)))
+  } else {
+    return []
+  }
+}
+
+function createNodes(tree: LabeledTree): {id: string, label: string}[] {
+  if ("children" in tree) {
+    return [{id: hash(tree), label: tree.label.label}].concat(...tree.children.map(child=>createNodes(child)))
+  } else {
+    return [{id: hash(tree), label: tree.label}]
+  }
+}
+
 function ConstituentTreeViewer(props: ConstituentTreeViewerProps): JSX.Element {
   if (!props.constituentTrees) {
     return <Spinner animation="border" />;
   }
-  return <JsonTree data={props.constituentTrees} theme={theme} />;
+  return (
+    <>
+      <Graph graph={{nodes: createNodes(props.constituentTrees[0]), edges: createEdges(props.constituentTrees[0])}} options={{layout: {hierarchical: {direction: 'UD', sortMethod: 'directed'}}}}/>
+      <JsonTree data={props.constituentTrees} theme={theme} />
+    </>
+  );
 }
 
 interface GrammarViewerProps {
@@ -87,7 +121,7 @@ function RenderMathJaxSrcCategory(tree: LabeledLabelTree): string {
       case "right":
         return `(${RenderMathJaxSrcCategory(
           tree.children[0]
-        )}\\${RenderMathJaxSrcCategory(tree.children[1])})`;
+        )}\\backslash ${RenderMathJaxSrcCategory(tree.children[1])})`;
     }
   } else {
     return tree.label;
@@ -101,24 +135,55 @@ function RendeMathJaxSrcDerivation(tree: LabeledTree): string {
         tree.children[0]
       )}${RendeMathJaxSrcDerivation(
         tree.children[1]
-      )}\\BIC{${RenderMathJaxSrcCategory(tree.label)}}`;
+      )}\\BIC{$${RenderMathJaxSrcCategory(tree.label)}$}`;
     } else if (tree.children.length === 1) {
       return `${RendeMathJaxSrcDerivation(
         tree.children[0]
-      )}\\BIC{${RenderMathJaxSrcCategory(tree.label)}}`;
+      )}\\UIC{$${RenderMathJaxSrcCategory(tree.label)}$}`;
     }
   } else {
-    return tree.label;
+    return `\\AXC{$${tree.label}$}`;
   }
 }
 
-function renderProoftree(tree: LabeledTree): JSX.Element {
-  return <MathJax.Formula formula={`$$${RendeMathJaxSrcDerivation(tree)}$$`} />
+function ProofTree({ tree }: { tree: LabeledTree }): JSX.Element {
+  const [style, setState] = useState("");
+  useEffect(() => {
+    try {
+      const style1 = adaptor.textContent(
+        svg.styleSheet(mathDocument) as LiteElement
+      );
+      setState(style1);
+    } catch {
+      return;
+    }
+  }, []);
+  return (
+    <>
+      <div
+        dangerouslySetInnerHTML={{
+          __html: adaptor.outerHTML(
+            mathDocument.convert(
+              `\\begin{prooftree}${RendeMathJaxSrcDerivation(
+                tree
+              )}\\end{prooftree}`,
+              {
+                display: true,
+              }
+            )
+          ),
+        }}
+      />
+      <Head>
+        <style>{style}</style>
+      </Head>
+    </>
+  );
 }
 
 function CCGTreeViewer(props: CCGTreeViewerProps) {
-  const [derivations, setState] = React.useState(undefined);
-  React.useEffect(() => {
+  const [derivations, setState] = useState(undefined);
+  useEffect(() => {
     if (!props.grammar) {
       setState(undefined);
       return;
@@ -128,11 +193,16 @@ function CCGTreeViewer(props: CCGTreeViewerProps) {
       .then((response: AxiosResponse) => {
         setState(response.data.result);
       });
-  }, [props.grammar]);
+  });
   if (!derivations) {
     return <Spinner animation="border" />;
   }
-  return <JsonTree data={derivations} theme={theme} />;
+  return (
+    <>
+      <ProofTree tree={derivations[0]} />
+      <JsonTree data={derivations} theme={theme} />
+    </>
+  );
 }
 
 function createRequest(
@@ -159,13 +229,13 @@ interface AppState {
 }
 
 function App(): JSX.Element {
-  const [state, setState] = React.useState<AppState>({
+  const [state, setState] = useState<AppState>({
     constituentTrees: undefined,
     grammars: undefined,
     grammar: undefined,
     sentence: undefined,
   });
-  React.useEffect(() => {
+  useEffect(() => {
     if (!state.sentence) {
       setState({
         ...state,
@@ -191,7 +261,7 @@ function App(): JSX.Element {
         });
       });
   }, [state.sentence]);
-  React.useEffect(() => {
+  useEffect(() => {
     if (!state.constituentTrees) {
       setState({ ...state, grammars: undefined, grammar: undefined });
       return;
