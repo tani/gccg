@@ -12,8 +12,9 @@ import { liteAdaptor } from "mathjax-full/js/adaptors/liteAdaptor";
 import { RegisterHTMLHandler } from "mathjax-full/js/handlers/html";
 import { AllPackages } from "mathjax-full/js/input/tex/AllPackages";
 import { LiteElement } from "mathjax-full/js/adaptors/lite/Element";
-import Graph from "react-graph-vis";
+import Graph from "dagre-d3-react";
 import hash from "object-hash";
+import NumericInput from "react-numeric-input";
 const adaptor = liteAdaptor();
 RegisterHTMLHandler(adaptor);
 const tex = new TeX({ packages: AllPackages });
@@ -64,22 +65,24 @@ interface ConstituentTreeViewerProps {
   constituentTrees?: LabeledTree[];
 }
 
-function createEdges(tree: LabeledTree): {from: string, to: string}[] {
+function createEdges(tree: LabeledTree): { source: string; target: string }[] {
   if ("children" in tree) {
-    const edges = tree.children.map(child=>{
-      return {from: hash(tree), to: hash(child)}
-    })
-    return edges.concat(...tree.children.map(child=>createEdges(child)))
+    const edges = tree.children.map((child) => {
+      return { source: hash(tree), target: hash(child) };
+    });
+    return edges.concat(...tree.children.map((child) => createEdges(child)));
   } else {
-    return []
+    return [];
   }
 }
 
-function createNodes(tree: LabeledTree): {id: string, label: string}[] {
+function createNodes(tree: LabeledTree): { id: string; label: string }[] {
   if ("children" in tree) {
-    return [{id: hash(tree), label: tree.label.label}].concat(...tree.children.map(child=>createNodes(child)))
+    return [{ id: hash(tree), label: tree.label.label }].concat(
+      ...tree.children.map((child) => createNodes(child))
+    );
   } else {
-    return [{id: hash(tree), label: tree.label}]
+    return [{ id: hash(tree), label: tree.label }];
   }
 }
 
@@ -89,10 +92,36 @@ function ConstituentTreeViewer(props: ConstituentTreeViewerProps): JSX.Element {
   }
   return (
     <>
-      <Graph graph={{nodes: createNodes(props.constituentTrees[0]), edges: createEdges(props.constituentTrees[0])}} options={{layout: {hierarchical: {direction: 'UD', sortMethod: 'directed'}}}}/>
+      {props.constituentTrees.map((tree) => {
+        return (
+          <Graph
+            key={hash(tree)}
+            nodes={createNodes(tree)}
+            links={createEdges(tree)}
+            width="500"
+            height="1000"
+            shape="circle"
+          />
+        );
+      })}
       <JsonTree data={props.constituentTrees} theme={theme} />
     </>
   );
+}
+
+function renderGrammar(grammar: LabeledTree[]) {
+  const body = grammar
+    .map((rule) => {
+      if ("children" in rule && rule.children.length === 1) {
+        const word = rule.children[0].label;
+        const category = RenderMathJaxSrcCategory(rule.label);
+        return `${word} &\\rightarrow ${category}`;
+      } else {
+        throw new Error(`Malformed Grammar: ${rule}`);
+      }
+    })
+    .join("\\\\");
+  return `\\begin{align*}${body}\\end{align*}`;
 }
 
 interface GrammarViewerProps {
@@ -101,10 +130,39 @@ interface GrammarViewerProps {
 }
 
 function GrammarViewer(props: GrammarViewerProps): JSX.Element {
+  const [state, setState] = useState({
+    sentence: 0,
+    grammar: 0,
+  });
   if (!props.grammars) {
     return <Spinner animation="border" />;
   }
-  return <JsonTree data={props.grammars} theme={theme} />;
+  return (
+    <>
+      <NumericInput
+        min={0}
+        max={props.grammars.length - 1}
+        value={state.sentence}
+        onChange={(v) => {
+          setState({ grammar: 0, sentence: v });
+        }}
+      />
+      <NumericInput
+        min={0}
+        max={props.grammars[state.sentence].length - 1}
+        value={state.grammar}
+        onChange={(v) => {
+          props.handleGrammarSelection(props.grammars[state.sentence][v]);
+          setState({ ...state, grammar: v });
+        }}
+      />
+      <MathJax
+        src={renderGrammar(props.grammars[state.sentence][state.grammar])}
+        options={{ display: true }}
+      />
+      <JsonTree data={props.grammars} theme={theme} />
+    </>
+  );
 }
 
 interface CCGTreeViewerProps {
@@ -146,7 +204,7 @@ function RendeMathJaxSrcDerivation(tree: LabeledTree): string {
   }
 }
 
-function ProofTree({ tree }: { tree: LabeledTree }): JSX.Element {
+function MathJax(props: { src: string; options: any }): JSX.Element {
   const [style, setState] = useState("");
   useEffect(() => {
     try {
@@ -157,26 +215,34 @@ function ProofTree({ tree }: { tree: LabeledTree }): JSX.Element {
     } catch {
       return;
     }
-  }, []);
+  });
   return (
     <>
       <div
         dangerouslySetInnerHTML={{
           __html: adaptor.outerHTML(
-            mathDocument.convert(
-              `\\begin{prooftree}${RendeMathJaxSrcDerivation(
-                tree
-              )}\\end{prooftree}`,
-              {
-                display: true,
-              }
-            )
+            mathDocument.convert(props.src, props.options)
           ),
         }}
       />
       <Head>
         <style>{style}</style>
       </Head>
+    </>
+  );
+}
+
+function ProofTree({ tree }: { tree: LabeledTree }): JSX.Element {
+  return (
+    <>
+      <MathJax
+        src={`\\begin{prooftree}${RendeMathJaxSrcDerivation(
+          tree
+        )}\\end{prooftree}`}
+        options={{
+          display: true,
+        }}
+      />
     </>
   );
 }
@@ -193,13 +259,15 @@ function CCGTreeViewer(props: CCGTreeViewerProps) {
       .then((response: AxiosResponse) => {
         setState(response.data.result);
       });
-  });
+  }, [props.grammar]);
   if (!derivations) {
     return <Spinner animation="border" />;
   }
   return (
     <>
-      <ProofTree tree={derivations[0]} />
+      {derivations.map((derivation) => {
+        return <ProofTree key={hash(derivation)} tree={derivation} />;
+      })}
       <JsonTree data={derivations} theme={theme} />
     </>
   );
