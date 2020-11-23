@@ -70,7 +70,7 @@ const CCGXTreeViewer: React.FC<{
         <TabPanel
           role="tabpanel"
           title="visualize"
-          style={{ height: "calc(100% - 60px)", overflow: "auto" }}
+          style={{ height: "calc(100% - 95px)", overflow: "auto" }}
         >
           {props.grammars ? (
             props.grammars.map((grammar, i) => (
@@ -87,7 +87,7 @@ const CCGXTreeViewer: React.FC<{
         <TabPanel
           role="tabpanel"
           title="json"
-          style={{ height: "calc(100% - 60px)", overflow: "auto" }}
+          style={{ height: "calc(100% - 95px)", overflow: "auto" }}
         >
           <JsonTree data={props.grammars} theme={theme} />
         </TabPanel>

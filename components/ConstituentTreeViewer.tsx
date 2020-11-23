@@ -53,7 +53,7 @@ const ConstituentTreeViewer: React.FC<ConstituentTreeViewerProps> = (props) => {
         <TabPanel
           role="tabpanel"
           title="visualize"
-          style={{ height: "calc(100% - 60px)", overflow: "auto" }}
+          style={{ height: "calc(100% - 95px)", overflow: "auto" }}
         >
           {props.constituentTrees ? (
             props.constituentTrees.map((tree) => {
@@ -75,7 +75,7 @@ const ConstituentTreeViewer: React.FC<ConstituentTreeViewerProps> = (props) => {
         <TabPanel
           role="tabpanel"
           title="json"
-          style={{ height: "calc(100% - 60px)", overflow: "auto" }}
+          style={{ height: "calc(100% - 95px)", overflow: "auto" }}
         >
           <JsonTree data={props.constituentTrees} theme={theme} />
         </TabPanel>
