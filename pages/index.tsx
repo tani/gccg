@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { v4 as uuidv4 } from "uuid";
 import JsonTree from "react-json-tree";
-import { Button, Spinner } from "react-bootstrap";
+import { Button, Spinner, Tab, Tabs } from "react-bootstrap";
 import { LabeledLabelTree, LabeledTree } from "../lib/labeled_tree";
 import { mathjax } from "mathjax-full/js/mathjax";
 import { TeX } from "mathjax-full/js/input/tex";
@@ -91,7 +91,8 @@ function ConstituentTreeViewer(props: ConstituentTreeViewerProps): JSX.Element {
     return <Spinner animation="border" />;
   }
   return (
-    <>
+    <Tabs defaultActiveKey="visualize">
+      <Tab eventKey="visualize" title="Visualize">
       {props.constituentTrees.map((tree) => {
         return (
           <Graph
@@ -99,13 +100,16 @@ function ConstituentTreeViewer(props: ConstituentTreeViewerProps): JSX.Element {
             nodes={createNodes(tree)}
             links={createEdges(tree)}
             width="500"
-            height="1000"
+            height="600"
             shape="circle"
           />
         );
       })}
-      <JsonTree data={props.constituentTrees} theme={theme} />
-    </>
+      </Tab>
+      <Tab eventKey="JSON" title="JSON">
+        <JsonTree data={props.constituentTrees} theme={theme} />
+      </Tab>
+    </Tabs>
   );
 }
 
@@ -138,30 +142,34 @@ function GrammarViewer(props: GrammarViewerProps): JSX.Element {
     return <Spinner animation="border" />;
   }
   return (
-    <>
-      <NumericInput
-        min={0}
-        max={props.grammars.length - 1}
-        value={state.sentence}
-        onChange={(v) => {
-          setState({ grammar: 0, sentence: v });
-        }}
-      />
-      <NumericInput
-        min={0}
-        max={props.grammars[state.sentence].length - 1}
-        value={state.grammar}
-        onChange={(v) => {
-          props.handleGrammarSelection(props.grammars[state.sentence][v]);
-          setState({ ...state, grammar: v });
-        }}
-      />
-      <MathJax
-        src={renderGrammar(props.grammars[state.sentence][state.grammar])}
-        options={{ display: true }}
-      />
-      <JsonTree data={props.grammars} theme={theme} />
-    </>
+    <Tabs defaultActiveKey="visualize">
+      <Tab eventKey="visualize" title="visualize">
+        <NumericInput
+          min={0}
+          max={props.grammars.length - 1}
+          value={state.sentence}
+          onChange={(v) => {
+            setState({ grammar: 0, sentence: v });
+          }}
+        />
+        <NumericInput
+          min={0}
+          max={props.grammars[state.sentence].length - 1}
+          value={state.grammar}
+          onChange={(v) => {
+            props.handleGrammarSelection(props.grammars[state.sentence][v]);
+            setState({ ...state, grammar: v });
+          }}
+        />
+        <MathJax
+          src={renderGrammar(props.grammars[state.sentence][state.grammar])}
+          options={{ display: true }}
+        />
+      </Tab>
+      <Tab eventKey="json" title="JSON">
+        <JsonTree data={props.grammars} theme={theme} />
+      </Tab>
+    </Tabs>
   );
 }
 
@@ -264,12 +272,16 @@ function CCGTreeViewer(props: CCGTreeViewerProps) {
     return <Spinner animation="border" />;
   }
   return (
-    <>
-      {derivations.map((derivation) => {
-        return <ProofTree key={hash(derivation)} tree={derivation} />;
-      })}
-      <JsonTree data={derivations} theme={theme} />
-    </>
+    <Tabs defaultActiveKey="visualize">
+      <Tab eventKey="visualize" title="Visualize">
+        {derivations.map((derivation) => {
+          return <ProofTree key={hash(derivation)} tree={derivation} />;
+        })}
+      </Tab>
+      <Tab eventKey="json" title="JSON">
+        <JsonTree data={derivations} theme={theme} />
+      </Tab>
+    </Tabs>
   );
 }
 
