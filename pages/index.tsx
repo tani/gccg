@@ -50,6 +50,15 @@ function App(): JSX.Element {
     }
     setState({ ...state, grammar: grammars.map((g) => g[0]) });
   }, [grammars]);
+  const handleSentenceUpdate = (sentence: string) => {
+    setState({
+      ...state,
+      sentence,
+    });
+  };
+  const handleGrammarSelection = (grammar: LabeledTree[][]) => {
+    setState({ ...state, grammar });
+  };
   return (
     <>
       <Head>
@@ -58,14 +67,7 @@ function App(): JSX.Element {
       </Head>
       <GridLayout className="layout" cols={2} rowHeight={400} width={1800}>
         <div key="sentence-form" data-grid={{ x: 0, y: 0, w: 1, h: 1 }}>
-          <SentenceForm
-            handleSentenceUpdate={(sentence: string) => {
-              setState({
-                ...state,
-                sentence,
-              });
-            }}
-          />
+          <SentenceForm handleSentenceUpdate={handleSentenceUpdate} />
         </div>
         <div
           key="constituent-tree-viewer"
@@ -76,9 +78,7 @@ function App(): JSX.Element {
         <div key="grammar-viewer" data-grid={{ x: 1, y: 0, w: 1, h: 1 }}>
           <GrammarViewer
             grammars={grammars as LabeledTree[][][]}
-            handleGrammarSelection={(grammar: LabeledTree[][]) => {
-              setState({ ...state, grammar });
-            }}
+            handleGrammarSelection={handleGrammarSelection}
           />
         </div>
         <div key="ccg-tree-viewer" data-grid={{ x: 1, y: 1, w: 1, h: 1 }}>
