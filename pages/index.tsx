@@ -77,7 +77,7 @@ function App(): JSX.Element {
         </div>
         <div key="grammar-viewer" data-grid={{ x: 1, y: 0, w: 1, h: 1 }}>
           <GrammarViewer
-            grammars={grammars as LabeledTree[][][]}
+            grammars={isGrammarsPending ? [] : grammars as LabeledTree[][][]}
             handleGrammarSelection={handleGrammarSelection}
           />
         </div>

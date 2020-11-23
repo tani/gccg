@@ -41,7 +41,7 @@ function renderGrammar(grammar: LabeledTree[]) {
 
 interface GrammarViewerProps {
   handleGrammarSelection(grammar: LabeledTree[][]): void;
-  grammars?: LabeledTree[][][];
+  grammars: LabeledTree[][][];
 }
 
 const GrammarPreviewer: React.FC<{
@@ -69,7 +69,7 @@ const GrammarPreviewer: React.FC<{
 };
 
 const GrammarView: React.FC<GrammarViewerProps> = (props) => {
-  const [state, setState] = useState(props.grammars?.map((g) => g[0]));
+  const [state, setState] = useState(props.grammars.map((g) => g[0]));
   useEffect(()=>{
     setState(props.grammars?.map((g)=>g[0]))
   }, [props.grammars])
