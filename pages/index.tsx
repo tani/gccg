@@ -16,7 +16,7 @@ interface AppState {
 function App(): JSX.Element {
   const [state, setState] = useState<AppState>({
     grammar: [],
-    sentence: undefined,
+    sentence: "",
   });
   const {
     data: constituentTrees,

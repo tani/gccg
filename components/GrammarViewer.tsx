@@ -106,7 +106,7 @@ const GrammarView: React.FC<GrammarViewerProps> = (props) => {
               };
               return (
                 <GrammarPreviewer
-                  key={hash(grammars)}
+                  key={k}
                   grammars={grammars}
                   handleGrammarChange={handleGrammarChange}
                 />

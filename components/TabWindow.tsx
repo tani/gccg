@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 
 const TabContext = React.createContext({
   activeTab: "",
@@ -10,13 +10,8 @@ const TabContext = React.createContext({
 export const TabPanel: React.FC<{ title: string; [x: string]: unknown }> = (
   props
 ) => {
-  return (
-    <TabContext.Consumer>
-      {(context) =>
-          <div {...props} hidden={context.activeTab !== props.title}></div>
-      }
-    </TabContext.Consumer>
-  );
+  const context = useContext(TabContext);
+  return <div {...props} hidden={context.activeTab !== props.title}></div>;
 };
 
 export const TabList: React.FC<{ [x: string]: unknown }> = (props) => {
@@ -26,16 +21,13 @@ export const TabList: React.FC<{ [x: string]: unknown }> = (props) => {
 export const Tab: React.FC<{ target: string; [x: string]: unknown }> = (
   props
 ) => {
+  const context = useContext(TabContext);
   return (
-    <TabContext.Consumer>
-      {(context) => (
-        <button
-          {...props}
-          aria-selected={context.activeTab === props.target}
-          onClick={() => context.toggleTab(props.target)}
-        />
-      )}
-    </TabContext.Consumer>
+    <button
+      {...props}
+      aria-selected={context.activeTab === props.target}
+      onClick={() => context.toggleTab(props.target)}
+    />
   );
 };
 
