@@ -1,13 +1,12 @@
+import dynamic from "next/dynamic";
 import React, { useCallback } from "react";
+import Async from "react-async";
+import JsonTree from "react-json-tree";
+import request from "../lib/create_request";
 import { LabeledLabelTree, LabeledTree } from "../lib/labeled_tree";
 import theme from "../lib/theme";
-import JsonTree from "react-json-tree";
-import hash from "object-hash";
-import request from "../lib/create_request";
 import { Tab, Tabs, TabList, TabPanel } from "./TabWindow";
-import Async from "react-async";
-import dynamic from "next/dynamic"
-const MathJax = dynamic(()=>import("./MathJax"), { ssr: false });
+const MathJax = dynamic(() => import("./MathJax"), { ssr: false });
 interface CCGTreeViewerProps {
   grammar: LabeledTree[];
 }
@@ -73,17 +72,13 @@ const CCGXTreeViewer: React.FC<{
           title="visualize"
           style={{ height: "calc(100% - 95px)", overflow: "auto" }}
         >
-          {props.grammars ? (
-            props.grammars.map((grammar, i) => (
-              <div key={hash(grammar)}>
-                <p>Sentence {i}</p>
-                <CCGTreeViewer grammar={grammar} />
-                <hr></hr>
-              </div>
-            ))
-          ) : (
-            <p>Waiting input or response...</p>
-          )}
+          {props.grammars.map((grammar, i) => (
+            <div key={JSON.stringify(grammar)}>
+              <p>Sentence {i}</p>
+              <CCGTreeViewer grammar={grammar} />
+              <hr></hr>
+            </div>
+          ))}
         </TabPanel>
         <TabPanel
           role="tabpanel"
@@ -113,12 +108,13 @@ const CCGTreeViewer: React.FC<CCGTreeViewerProps> = (props) => {
       <Async.Fulfilled>
         {(data) =>
           (data as LabeledTree[]).map((derivation) => {
+            const src = `\\begin{prooftree}${RendeMathJaxSrcDerivation(
+              derivation
+            )}\\end{prooftree}`;
             return (
               <MathJax
-                key={hash(derivation)}
-                src={`\\begin{prooftree}${RendeMathJaxSrcDerivation(
-                  derivation
-                )}\\end{prooftree}`}
+                key={src}
+                src={src}
                 options={{
                   display: true,
                 }}

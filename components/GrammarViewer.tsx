@@ -1,15 +1,15 @@
-import React, { useCallback, useEffect, useState } from "react";
-import theme from "../lib/theme";
-import { LabeledTree, LabeledLabelTree } from "../lib/labeled_tree";
+import Axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import { produce } from "immer";
+import dynamic from "next/dynamic"
+import React, { useCallback, useState } from "react";
+import { useAsync } from "react-async";
 import JsonTree from "react-json-tree";
 import NumericInput from "react-numeric-input";
-import { Tab, TabList, Tabs, TabPanel } from "./TabWindow";
-import { useAsync } from "react-async";
-import Axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { JsonRpcRequest, JsonRpcResponse } from "../lib/jsonrpc";
 import { v4 } from "uuid";
-import produce from "immer";
-import dynamic from "next/dynamic"
+import { JsonRpcRequest, JsonRpcResponse } from "../lib/jsonrpc";
+import { LabeledTree, LabeledLabelTree } from "../lib/labeled_tree";
+import theme from "../lib/theme";
+import { Tab, TabList, Tabs, TabPanel } from "./TabWindow";
 
 const MathJax = dynamic(()=>import("./MathJax"), { ssr: false });
 
@@ -141,7 +141,7 @@ const GrammarView: React.FC<GrammarViewerProps> = (props) => {
               };
               return (
                 <GrammarPreviewer
-                  key={k}
+                  key={JSON.stringify(data[k])}
                   nGrammar={grammars.length}
                   grammar={state[k] || []}
                   handleGrammarChange={handleGrammarChange}

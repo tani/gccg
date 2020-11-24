@@ -1,14 +1,14 @@
-import React, { useCallback } from "react";
-import theme from "../lib/theme";
-import { LabeledTree } from "../lib/labeled_tree";
-import hash from "object-hash";
-import JsonTree from "react-json-tree";
-import Graph from "dagre-d3-react";
-import { Tab, TabList, Tabs, TabPanel } from "./TabWindow";
-import { useAsync } from "react-async";
 import Axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import Graph from "dagre-d3-react";
+import hash from "object-hash";
+import React, { useCallback } from "react";
+import { useAsync } from "react-async";
+import JsonTree from "react-json-tree";
 import { v4 as uuid } from "uuid";
 import { JsonRpcRequest, JsonRpcResponse } from "../lib/jsonrpc";
+import { LabeledTree } from "../lib/labeled_tree";
+import theme from "../lib/theme";
+import { Tab, TabList, Tabs, TabPanel } from "./TabWindow";
 
 interface ConstituentTreeViewerProps {
   text: string,
@@ -87,7 +87,7 @@ const ConstituentTreeViewer: React.FC<ConstituentTreeViewerProps> = (props) => {
             data.map((tree) => {
               return (
                 <Graph
-                  key={hash(tree)}
+                  key={JSON.stringify(tree)}
                   nodes={createNodes(tree)}
                   links={createEdges(tree)}
                   height="400"

@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { mathjax } from "mathjax-full/js/mathjax";
-import { TeX } from "mathjax-full/js/input/tex";
-import { CHTML } from "mathjax-full/js/output/chtml";
 import { browserAdaptor } from "mathjax-full/js/adaptors/browserAdaptor";
 import { RegisterHTMLHandler } from "mathjax-full/js/handlers/html";
+import { TeX } from "mathjax-full/js/input/tex";
 import { AllPackages } from "mathjax-full/js/input/tex/AllPackages";
+import { mathjax } from "mathjax-full/js/mathjax";
+import { CHTML } from "mathjax-full/js/output/chtml";
 import { OptionList } from "mathjax-full/js/util/Options";
 import Head from "next/head";
+import React, { memo, useEffect, useState } from "react";
 const adaptor = browserAdaptor();
 RegisterHTMLHandler(adaptor);
 const tex = new TeX({ packages: AllPackages });
@@ -37,4 +37,4 @@ const MathJax: React.FC<{ src: string; options: OptionList }> = (props) => {
   );
 };
 
-export default MathJax;
+export default memo(MathJax);
