@@ -1,12 +1,12 @@
+import produce from "immer";
 import Head from "next/head";
 import React, { useState } from "react";
-import SentenceForm from "../components/SentenceForm";
+import GridLayout from "react-grid-layout";
+import CCGTreeViewer from "../components/CCGTreeViewer";
 import ConstituentTreeViewer from "../components/ConstituentTreeViewer";
 import GrammarViewer from "../components/GrammarViewer";
-import CCGTreeViewer from "../components/CCGTreeViewer";
+import SentenceForm from "../components/SentenceForm";
 import { LabeledTree } from "../lib/labeled_tree";
-import GridLayout from "react-grid-layout";
-import produce from "immer";
 interface AppState {
   text: string;
   trees: LabeledTree[];
