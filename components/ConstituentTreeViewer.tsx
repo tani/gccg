@@ -1,6 +1,5 @@
 import Axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import Graph from "dagre-d3-react";
-import hash from "object-hash";
 import React, { useCallback } from "react";
 import { useAsync } from "react-async";
 import JsonTree from "react-json-tree";
@@ -18,7 +17,7 @@ interface ConstituentTreeViewerProps {
 function createEdges(tree: LabeledTree): { source: string; target: string }[] {
   if ("children" in tree) {
     const edges = tree.children.map((child) => {
-      return { source: hash(tree), target: hash(child) };
+      return { source: JSON.stringify(tree), target: JSON.stringify(child) };
     });
     return edges.concat(...tree.children.map((child) => createEdges(child)));
   } else {
@@ -28,11 +27,11 @@ function createEdges(tree: LabeledTree): { source: string; target: string }[] {
 
 function createNodes(tree: LabeledTree): { id: string; label: string }[] {
   if ("children" in tree) {
-    return [{ id: hash(tree), label: tree.label.label }].concat(
+    return [{ id: JSON.stringify(tree), label: tree.label.label }].concat(
       ...tree.children.map((child) => createNodes(child))
     );
   } else {
-    return [{ id: hash(tree), label: tree.label }];
+    return [{ id: JSON.stringify(tree), label: tree.label }];
   }
 }
 
