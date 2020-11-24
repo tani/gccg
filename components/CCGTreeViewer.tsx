@@ -1,12 +1,13 @@
 import React, { useCallback } from "react";
 import { LabeledLabelTree, LabeledTree } from "../lib/labeled_tree";
 import theme from "../lib/theme";
-import MathJax from "./MathJax";
 import JsonTree from "react-json-tree";
 import hash from "object-hash";
 import request from "../lib/create_request";
 import { Tab, Tabs, TabList, TabPanel } from "./TabWindow";
 import Async from "react-async";
+import dynamic from "next/dynamic"
+const MathJax = dynamic(()=>import("./MathJax"), { ssr: false });
 interface CCGTreeViewerProps {
   grammar: LabeledTree[];
 }

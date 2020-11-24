@@ -1,33 +1,36 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { mathjax } from "mathjax-full/js/mathjax";
 import { TeX } from "mathjax-full/js/input/tex";
 import { CHTML } from "mathjax-full/js/output/chtml";
-import { liteAdaptor } from "mathjax-full/js/adaptors/liteAdaptor";
+import { browserAdaptor } from "mathjax-full/js/adaptors/browserAdaptor";
 import { RegisterHTMLHandler } from "mathjax-full/js/handlers/html";
 import { AllPackages } from "mathjax-full/js/input/tex/AllPackages";
 import { OptionList } from "mathjax-full/js/util/Options";
 import Head from "next/head";
-const adaptor = liteAdaptor();
+const adaptor = browserAdaptor();
 RegisterHTMLHandler(adaptor);
 const tex = new TeX({ packages: AllPackages });
 const chtml = new CHTML({
   fontURL:
-    "https://cdn.jsdelivr.net/npm/mathjax@3/components/output/chtml/fonts/woff-v2",
+    "https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2",
 });
 const mathDocument = mathjax.document("", { InputJax: tex, OutputJax: chtml });
 
 const MathJax: React.FC<{ src: string; options: OptionList }> = (props) => {
-  const stylesheet = adaptor.textContent(chtml.styleSheet(mathDocument) as any);
+  const [stylesheet, setState] = useState("");
+  useEffect(() => {
+    setState(adaptor.textContent(chtml.styleSheet(mathDocument) as any));
+  }, []);
   return (
     <div>
       <Head>
         <style key="mathjax-stylesheet">{stylesheet}</style>
       </Head>
       <div
-        dangerouslySetInnerHTML={{
-          __html: adaptor.outerHTML(
-            mathDocument.convert(props.src, props.options)
-          ),
+        ref={(el) => {
+          if (!el) return;
+          while (el.firstChild) el.removeChild(el.firstChild);
+          el.appendChild(mathDocument.convert(props.src, props.options));
         }}
       />
     </div>

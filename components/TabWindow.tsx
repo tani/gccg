@@ -7,37 +7,40 @@ const TabContext = React.createContext({
   },
 });
 
-export const TabPanel: React.FC<{ title: string; [x: string]: unknown }> = (
+export const TabPanel: React.FC<{ title: string}&JSX.IntrinsicElements["div"]> = (
   props
 ) => {
   const context = useContext(TabContext);
-  return <div {...props} hidden={context.activeTab !== props.title}></div>;
+  const {title, ...options} = props;
+  return <div {...options} hidden={context.activeTab !== title}></div>;
 };
 
-export const TabList: React.FC<{ [x: string]: unknown }> = (props) => {
+export const TabList: React.FC<JSX.IntrinsicElements["div"]> = (props) => {
   return <menu {...props} />;
 };
 
-export const Tab: React.FC<{ target: string; [x: string]: unknown }> = (
+export const Tab: React.FC<{ target: string}&JSX.IntrinsicElements["button"]> = (
   props
 ) => {
   const context = useContext(TabContext);
+  const {target, ...options} = props
   return (
     <button
-      {...props}
-      aria-selected={context.activeTab === props.target}
-      onClick={() => context.toggleTab(props.target)}
+      {...options}
+      aria-selected={context.activeTab === target}
+      onClick={() => context.toggleTab(target)}
     />
   );
 };
 
-export const Tabs: React.FC<{ defaulTarget: string; [x: string]: unknown }> = (
+export const Tabs: React.FC<{ defaulTarget: string}&JSX.IntrinsicElements["div"]> = (
   props
 ) => {
-  const [activeTab, toggleTab] = useState(props.defaulTarget);
+  const {defaulTarget, ...options} = props
+  const [activeTab, toggleTab] = useState(defaulTarget);
   return (
     <TabContext.Provider value={{ activeTab, toggleTab }}>
-      <div {...props} />
+      <div {...options} />
     </TabContext.Provider>
   );
 };

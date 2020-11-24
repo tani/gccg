@@ -1,13 +1,18 @@
-import React from "react";
+import React, { useCallback } from "react";
 import theme from "../lib/theme";
 import { LabeledTree } from "../lib/labeled_tree";
 import hash from "object-hash";
 import JsonTree from "react-json-tree";
 import Graph from "dagre-d3-react";
 import { Tab, TabList, Tabs, TabPanel } from "./TabWindow";
+import { useAsync } from "react-async";
+import Axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import { v4 as uuid } from "uuid";
+import { JsonRpcRequest, JsonRpcResponse } from "../lib/jsonrpc";
 
 interface ConstituentTreeViewerProps {
-  constituentTrees?: LabeledTree[];
+  text: string,
+  handleTreeUpdate: (_: LabeledTree[]) => void
 }
 
 function createEdges(tree: LabeledTree): { source: string; target: string }[] {
@@ -32,6 +37,29 @@ function createNodes(tree: LabeledTree): { id: string; label: string }[] {
 }
 
 const ConstituentTreeViewer: React.FC<ConstituentTreeViewerProps> = (props) => {
+  const {data, isFulfilled} = useAsync({promiseFn: useCallback(async () => {
+    const config: AxiosRequestConfig = {
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }
+    const data: JsonRpcRequest = {
+      jsonrpc: "2.0",
+      id: uuid(),
+      method: "process",
+      params: [props.text, {
+        annotators: "tokenize,ssplit,pos,lemma,ner,parse",
+        "parse.binaryTrees": "true"
+      }]
+    }
+    const response = await Axios.post<JsonRpcRequest, AxiosResponse<JsonRpcResponse<any, any>>>("./api/proxy", data, config)
+    if ("error" in response.data) {
+      throw Error(JSON.stringify(response.data.error))
+    }
+    const trees = response.data.result.sentences.map(s=>s.binaryParse) as LabeledTree[]
+    props.handleTreeUpdate(trees)
+    return trees
+  }, [props.text])})
   return (
     <Tabs
       className="window"
@@ -55,8 +83,8 @@ const ConstituentTreeViewer: React.FC<ConstituentTreeViewerProps> = (props) => {
           title="visualize"
           style={{ height: "calc(100% - 95px)", overflow: "auto" }}
         >
-          {props.constituentTrees ? (
-            props.constituentTrees.map((tree) => {
+          {isFulfilled ?  (
+            data.map((tree) => {
               return (
                 <Graph
                   key={hash(tree)}
@@ -68,16 +96,14 @@ const ConstituentTreeViewer: React.FC<ConstituentTreeViewerProps> = (props) => {
                 />
               );
             })
-          ) : (
-            <p>Waiting input or response ...</p>
-          )}
+          ) : <></>}
         </TabPanel>
         <TabPanel
           role="tabpanel"
           title="json"
           style={{ height: "calc(100% - 95px)", overflow: "auto" }}
         >
-          <JsonTree data={props.constituentTrees} theme={theme} />
+          {isFulfilled ? <JsonTree data={data} theme={theme} /> : <></>}
         </TabPanel>
       </div>
     </Tabs>
