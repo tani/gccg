@@ -10,3 +10,22 @@ path {
 	fill: black;
 	stroke-width: 1.5px;
 }
+
+textarea {
+  width: 100%;
+  height: 50px;
+  margin-bottom: 10px;
+}
+
+.window {
+  height: 100%;
+}
+
+.window-body {
+  height: 100%;
+}
+
+[role="tabpanel"] {
+  height: calc(100% - 95px);
+  overflow: auto;
+}

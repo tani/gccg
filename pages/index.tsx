@@ -1,101 +1,39 @@
-import {produce} from "immer";
 import Head from "next/head";
-import React, { useReducer, useState } from "react";
+import React, { useReducer } from "react";
 import GridLayout from "react-grid-layout";
-import CCGTreeViewer from "../components/CCGTreeViewer";
-import ConstituentTreeViewer from "../components/ConstituentTreeViewer";
-import GrammarViewer from "../components/GrammarViewer";
-import SentenceForm from "../components/SentenceForm";
-import { LabeledTree } from "../lib/labeled_tree";
-interface AppState {
-  text: string;
-  trees: LabeledTree[];
-}
-
-interface GrammarsState {
-  grammars: LabeledTree[][]
-}
-
-interface GrammarChangeAction {
-  type: "GrammarChange",
-  sentenceId: number,
-  grammar: LabeledTree[]
-}
-
-const reducer: React.Reducer<GrammarsState, GrammarChangeAction> = (prevState, action) => {
-  switch(action.type) {
-    case "GrammarChange":
-      return produce(prevState, draftState=>{
-        draftState.grammars[action.sentenceId] = action.grammar
-      })
-  }
-}
+import ConstituentTree from "../components/ConstituentTree";
+import Derivation from "../components/Derivation";
+import Grammar from "../components/Grammar";
+import Sentence from "../components/Sentence";
+import { reducer, withSideEffect } from "../lib/reducer";
+import { AppContext, defaultAppStore } from "../lib/store";
 
 const App: React.FC = () => {
-  const [state, setState] = useState<AppState>({
-    text: "",
-    trees: [],
-  });
-
-  const [grammarState, dispatch] = useReducer(reducer, {
-    grammars: []
-  })
-
-  const handleSentenceUpdate = (text: string) => {
-    setState(
-      produce(state, (draftState) => {
-        draftState.text = text;
-      })
-    );
-  };
-
-  const handleTreeUpdate = (trees: LabeledTree[]) => {
-    setState(
-      produce(state, (draftState) => {
-        draftState.trees = trees;
-      })
-    );
-  };
-
-  const handleGrammarSelection = (grammar: LabeledTree[], sentenceId: number) => {
-    dispatch({
-      type: "GrammarChange",
-      grammar,
-      sentenceId
-    })
-  };
-
+  const [state, dispatch] = useReducer(reducer, defaultAppStore);
   return (
     <>
       <Head>
         <title>CCG Playground</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <GridLayout className="layout" cols={2} rowHeight={400} width={1800}>
-        <div key="sentence-form" data-grid={{ x: 0, y: 0, w: 1, h: 1 }}>
-          <SentenceForm handleSentenceUpdate={handleSentenceUpdate} />
-        </div>
-        <div
-          key="constituent-tree-viewer"
-          data-grid={{ x: 0, y: 1, w: 1, h: 1 }}
-        >
-          <ConstituentTreeViewer
-            text={state.text}
-            handleTreeUpdate={handleTreeUpdate}
-          />
-        </div>
-        <div key="grammar-viewer" data-grid={{ x: 1, y: 0, w: 1, h: 1 }}>
-          <GrammarViewer
-            trees={state.trees}
-            handleGrammarSelection={handleGrammarSelection}
-          />
-        </div>
-        <div key="ccg-tree-viewer" data-grid={{ x: 1, y: 1, w: 1, h: 1 }}>
-          <CCGTreeViewer grammars={grammarState.grammars} />
-        </div>
-      </GridLayout>
+      <AppContext.Provider value={{...state, dispatch: withSideEffect(dispatch)}}>
+        <GridLayout className="layout" cols={2} rowHeight={400} width={1800}>
+          <div key="sentence-form" data-grid={{ x: 0, y: 0, w: 1, h: 1 }}>
+            <Sentence />
+          </div>
+          <div key="constituent-tree-viewer" data-grid={{ x: 0, y: 1, w: 1, h: 1 }}>
+            <ConstituentTree />
+          </div>
+          <div key="grammar-viewer" data-grid={{ x: 1, y: 0, w: 1, h: 1 }}>
+            <Grammar />
+          </div>
+          <div key="ccg-tree-viewer" data-grid={{ x: 1, y: 1, w: 1, h: 1 }}>
+            <Derivation />
+          </div>
+        </GridLayout>
+      </AppContext.Provider>
     </>
   );
-}
+};
 
 export default App;
