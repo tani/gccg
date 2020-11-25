@@ -17,17 +17,17 @@ const App: React.FC = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <AppContext.Provider value={{...state, dispatch: withSideEffect(dispatch)}}>
-        <GridLayout className="layout" cols={2} rowHeight={400} width={1800}>
-          <div key="sentence-form" data-grid={{ x: 0, y: 0, w: 1, h: 1 }}>
+        <GridLayout className="layout" cols={6} rowHeight={100} width={1800}>
+          <div key="sentence-form" data-grid={{ x: 0, y: 0, w: 3, h: 4 }}>
             <Sentence />
           </div>
-          <div key="constituent-tree-viewer" data-grid={{ x: 0, y: 1, w: 1, h: 1 }}>
+          <div key="constituent-tree-viewer" data-grid={{ x: 0, y: 4, w: 3, h: 4 }}>
             <ConstituentTree />
           </div>
-          <div key="grammar-viewer" data-grid={{ x: 1, y: 0, w: 1, h: 1 }}>
+          <div key="grammar-viewer" data-grid={{ x: 3, y: 0, w: 3, h: 4 }}>
             <Grammar />
           </div>
-          <div key="ccg-tree-viewer" data-grid={{ x: 1, y: 1, w: 1, h: 1 }}>
+          <div key="ccg-tree-viewer" data-grid={{ x: 3, y: 4, w: 3, h: 4 }}>
             <Derivation />
           </div>
         </GridLayout>
