@@ -1,5 +1,5 @@
 import dynamic from "next/dynamic";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import JsonTree from "react-json-tree";
 import NumericInput from "react-numeric-input";
 import { LabeledTree, LabeledLabelTree } from "../lib/labeled_tree";
@@ -39,23 +39,27 @@ function renderGrammar(grammar: LabeledTree[]) {
   return `\\begin{align*}${body}\\end{align*}`;
 }
 
-const Grammar: React.FC = () => {
+const Selector: React.FC<{ index: number }> = (props) => {
+  const [state, setState] = useState(0);
   const context = useContext(AppContext);
-
-  const createHandleChange = (grammars: LabeledTree[][]) => (index: number) => {
+  const handleClick = (index: number) => {
     context.dispatch({
       type: "ConstructDerivationRequest",
-      grammar: grammars[index],
       index,
+      grammar: context.allGrammars[props.index][index],
     });
+    setState(index);
   };
+  return (
+    <>
+      <NumericInput min={0} max={context.allGrammars[props.index].length - 1} value={state} onChange={handleClick} />
+      <MathJax src={renderGrammar(context.allGrammars[props.index][state])} options={{ display: true }} />
+    </>
+  );
+};
 
-  const GrammarPanel = context.allGrammars.map((grammars, index) => (
-    <div key={JSON.stringify(grammars)}>
-      <NumericInput min={0} max={grammars.length - 1} onChange={createHandleChange(grammars)} />
-      <MathJax src={renderGrammar(context.grammars[index] || [])} options={{ display: true }} />
-    </div>
-  ));
+const Grammar: React.FC = () => {
+  const context = useContext(AppContext);
 
   const JsonPanel = <JsonTree data={context.allGrammars} theme={theme} />;
 
@@ -74,7 +78,9 @@ const Grammar: React.FC = () => {
           </Tab>
         </TabList>
         <TabPanel role="tabpanel" title="visualize">
-          {GrammarPanel}
+          {context.allGrammars.map((g, index) => (
+            <Selector key={JSON.stringify(g)} index={index} />
+          ))}
         </TabPanel>
         <TabPanel role="tabpanel" title="json">
           {JsonPanel}
