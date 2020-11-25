@@ -1,7 +1,6 @@
 import Axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { produce } from "immer";
-import dynamic from "next/dynamic"
-import React, { useCallback, useState } from "react";
+import dynamic from "next/dynamic";
+import React, { useCallback, useEffect, useState } from "react";
 import { useAsync } from "react-async";
 import JsonTree from "react-json-tree";
 import NumericInput from "react-numeric-input";
@@ -11,7 +10,7 @@ import { LabeledTree, LabeledLabelTree } from "../lib/labeled_tree";
 import theme from "../lib/theme";
 import { Tab, TabList, Tabs, TabPanel } from "./TabWindow";
 
-const MathJax = dynamic(()=>import("./MathJax"), { ssr: false });
+const MathJax = dynamic(() => import("./MathJax"), { ssr: false });
 
 function renderMathJaxSrcCategory(tree: LabeledLabelTree): string {
   if ("children" in tree) {
@@ -46,29 +45,31 @@ function renderGrammar(grammar: LabeledTree[]) {
 }
 
 interface GrammarViewerProps {
-  handleGrammarSelection(grammar: LabeledTree[][]): void;
+  handleGrammarSelection(grammar: LabeledTree[], sentenceId: number): void;
   trees: LabeledTree[];
 }
 
 const GrammarPreviewer: React.FC<{
-  nGrammar: number,
-  grammar: LabeledTree[];
-  handleGrammarChange: (k: number) => void;
+  grammars: LabeledTree[][];
+  handleGrammarChange: (grammar: LabeledTree[]) => void;
 }> = (props) => {
   const [i, setState] = useState(0);
+  useEffect(() => {
+    props.handleGrammarChange(props.grammars[0]);
+  }, []);
   return (
     <>
       <NumericInput
         min={0}
-        max={props.nGrammar - 1}
+        max={props.grammars.length - 1}
         value={i}
         onChange={(v) => {
-          props.handleGrammarChange(v);
+          props.handleGrammarChange(props.grammars[v]);
           setState(v);
         }}
       />
       <MathJax
-        src={renderGrammar(props.grammar)}
+        src={renderGrammar(props.grammars[i])}
         options={{ display: true }}
       />
     </>
@@ -76,7 +77,6 @@ const GrammarPreviewer: React.FC<{
 };
 
 const GrammarView: React.FC<GrammarViewerProps> = (props) => {
-  const [state, setState] = useState<LabeledTree[][]>([]);
   const { data, isFulfilled } = useAsync({
     promiseFn: useCallback(async () => {
       const listOfGrammars = await Promise.all(
@@ -90,11 +90,10 @@ const GrammarView: React.FC<GrammarViewerProps> = (props) => {
             method: "extract",
             params: [tree],
           };
-          const response = await Axios.post<JsonRpcRequest, AxiosResponse<JsonRpcResponse<any, any>>>(
-            "./api/proxy",
-            data,
-            config
-          );
+          const response = await Axios.post<
+            JsonRpcRequest,
+            AxiosResponse<JsonRpcResponse<any, any>>
+          >("./api/proxy", data, config);
           if ("error" in response.data) {
             throw Error(JSON.stringify(response.data.error));
           }
@@ -102,8 +101,6 @@ const GrammarView: React.FC<GrammarViewerProps> = (props) => {
           return grammars;
         })
       );
-      props.handleGrammarSelection(listOfGrammars.map(g=>g[0]))
-      setState(listOfGrammars.map(g=>g[0]))
       return listOfGrammars;
     }, [props.trees]),
   });
@@ -130,34 +127,29 @@ const GrammarView: React.FC<GrammarViewerProps> = (props) => {
           title="visualize"
           style={{ height: "calc(100% - 95px)", overflow: "auto" }}
         >
-          { isFulfilled ? (
+          {isFulfilled ? (
             data.map((grammars, k) => {
-              const handleGrammarChange = (i: number) => {
-                const nextState = produce(state, (draftState) => {
-                  draftState[k] = grammars[i];
-                });
-                props.handleGrammarSelection(nextState);
-                setState(nextState);
+              const handleGrammarChange = (grammar: LabeledTree[]) => {
+                props.handleGrammarSelection(grammar, k);
               };
               return (
                 <GrammarPreviewer
                   key={JSON.stringify(data[k])}
-                  nGrammar={grammars.length}
-                  grammar={state[k] || []}
+                  grammars={grammars}
                   handleGrammarChange={handleGrammarChange}
                 />
               );
             })
-          ) : <></>}
+          ) : (
+            <></>
+          )}
         </TabPanel>
         <TabPanel
           role="tabpanel"
           title="json"
           style={{ height: "calc(100% - 95px)", overflow: "auto" }}
         >
-          {isFulfilled ? (
-            <JsonTree data={data} theme={theme} />
-          ) : <></>}
+          {isFulfilled ? <JsonTree data={data} theme={theme} /> : <></>}
         </TabPanel>
       </div>
     </Tabs>

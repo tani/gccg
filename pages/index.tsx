@@ -1,6 +1,6 @@
-import produce from "immer";
+import {produce} from "immer";
 import Head from "next/head";
-import React, { useState } from "react";
+import React, { useReducer, useState } from "react";
 import GridLayout from "react-grid-layout";
 import CCGTreeViewer from "../components/CCGTreeViewer";
 import ConstituentTreeViewer from "../components/ConstituentTreeViewer";
@@ -10,15 +10,36 @@ import { LabeledTree } from "../lib/labeled_tree";
 interface AppState {
   text: string;
   trees: LabeledTree[];
-  grammars: LabeledTree[][];
+}
+
+interface GrammarsState {
+  grammars: LabeledTree[][]
+}
+
+interface GrammarChangeAction {
+  type: "GrammarChange",
+  sentenceId: number,
+  grammar: LabeledTree[]
+}
+
+const reducer: React.Reducer<GrammarsState, GrammarChangeAction> = (prevState, action) => {
+  switch(action.type) {
+    case "GrammarChange":
+      return produce(prevState, draftState=>{
+        draftState.grammars[action.sentenceId] = action.grammar
+      })
+  }
 }
 
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>({
     text: "",
     trees: [],
-    grammars: [],
   });
+
+  const [grammarState, dispatch] = useReducer(reducer, {
+    grammars: []
+  })
 
   const handleSentenceUpdate = (text: string) => {
     setState(
@@ -36,12 +57,12 @@ const App: React.FC = () => {
     );
   };
 
-  const handleGrammarSelection = (grammars: LabeledTree[][]) => {
-    setState(
-      produce(state, (draftState) => {
-        draftState.grammars = grammars;
-      })
-    );
+  const handleGrammarSelection = (grammar: LabeledTree[], sentenceId: number) => {
+    dispatch({
+      type: "GrammarChange",
+      grammar,
+      sentenceId
+    })
   };
 
   return (
@@ -70,7 +91,7 @@ const App: React.FC = () => {
           />
         </div>
         <div key="ccg-tree-viewer" data-grid={{ x: 1, y: 1, w: 1, h: 1 }}>
-          <CCGTreeViewer grammars={state.grammars} />
+          <CCGTreeViewer grammars={grammarState.grammars} />
         </div>
       </GridLayout>
     </>
