@@ -9,17 +9,18 @@
     "start": "next start"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^1.4.0",
     "axios": "^0.21.0",
     "dagre-d3-react": "^0.2.4",
     "immer": "^8.0.0",
     "mathjax-full": "^3.1.2",
     "next": "10.0.2",
     "react": "17.0.1",
-    "react-async": "^10.0.1",
     "react-dom": "17.0.1",
     "react-grid-layout": "^1.2.0",
     "react-json-tree": "^0.13.0",
     "react-numeric-input": "^2.2.3",
+    "react-redux": "^7.2.2",
     "uuid": "^8.3.1",
     "xp.css": "^0.2.3"
   },
@@ -28,6 +29,7 @@
     "@types/react": "^17.0.0",
     "@types/react-grid-layout": "^1.1.1",
     "@types/react-numeric-input": "^2.2.3",
+    "@types/react-redux": "^7.1.11",
     "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "^4.8.1",
     "@typescript-eslint/parser": "^4.8.1",
