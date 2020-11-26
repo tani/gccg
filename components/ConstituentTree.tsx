@@ -1,8 +1,9 @@
 import Graph from "dagre-d3-react";
-import React, { useContext } from "react";
+import React from "react";
 import JsonTree from "react-json-tree";
+import { useSelector } from "react-redux";
 import { LabeledTree } from "../lib/labeled_tree";
-import { AppContext } from "../lib/store";
+import { RootState } from "../lib/slice";
 import theme from "../lib/theme";
 import { Tab, TabList, Tabs, TabPanel } from "./TabWindow";
 
@@ -28,8 +29,8 @@ function createNodes(tree: LabeledTree): { id: string; label: string }[] {
 }
 
 const ConstituentTree: React.FC = () => {
-  const context = useContext(AppContext);
-  const  GraphPanel = context.trees.map((tree) => (
+  const trees = useSelector<RootState, LabeledTree[]>((state)=>state.trees);
+  const  GraphPanel = trees.map((tree) => (
       <Graph
         key={JSON.stringify(tree)}
         nodes={createNodes(tree)}
@@ -40,7 +41,7 @@ const ConstituentTree: React.FC = () => {
       />
     ));
 
-  const JsonPanel = <JsonTree data={context.trees} theme={theme} />;
+  const JsonPanel = <JsonTree data={trees} theme={theme} />;
 
   return (
     <Tabs className="window" defaulTarget="visualize">

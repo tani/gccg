@@ -1,14 +1,12 @@
-import React, { useContext, useState } from "react";
-import { AppContext } from "../lib/store";
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { generateTrees } from "../lib/slice";
 
 const Sentence: React.FC = () => {
-  const context = useContext(AppContext);
+  const dispatch = useDispatch()
   const [state, setState] = useState("");
   const handleSubmit: React.ChangeEventHandler<HTMLFormElement> = (event) => {
-    context.dispatch({
-      type: "GenerateTreesRequest",
-      text: state
-    })
+    dispatch(generateTrees(state))
     event.preventDefault();
   };
   const handleChange: React.ChangeEventHandler<HTMLTextAreaElement> = (event) => {

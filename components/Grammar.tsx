@@ -1,9 +1,9 @@
 import dynamic from "next/dynamic";
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import JsonTree from "react-json-tree";
-import NumericInput from "react-numeric-input";
+import { useDispatch, useSelector } from "react-redux";
 import { LabeledTree, LabeledLabelTree } from "../lib/labeled_tree";
-import { AppContext } from "../lib/store";
+import { constructDerivation, RootState } from "../lib/slice";
 import theme from "../lib/theme";
 import { Tab, TabList, Tabs, TabPanel } from "./TabWindow";
 
@@ -41,28 +41,24 @@ function renderGrammar(grammar: LabeledTree[]) {
 
 const Selector: React.FC<{ index: number }> = (props) => {
   const [state, setState] = useState(0);
-  const context = useContext(AppContext);
-  const handleClick = (index: number) => {
-    context.dispatch({
-      type: "ConstructDerivationRequest",
-      index,
-      grammar: context.allGrammars[props.index][index],
-    });
+  const allGrammars = useSelector<RootState, LabeledTree[][][]>(state=>state.allGrammars)
+  const dispatch = useDispatch();
+
+  const handleClick: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+    const index = parseInt(event.target.value)
+    dispatch(constructDerivation({ grammar: allGrammars[props.index][index], index: props.index }));
     setState(index);
   };
   return (
     <>
-      <NumericInput min={0} max={context.allGrammars[props.index].length - 1} value={state} onChange={handleClick} />
-      <MathJax src={renderGrammar(context.allGrammars[props.index][state])} options={{ display: true }} />
+      <input type="number" max={allGrammars[props.index].length - 1} min={0} value={state} onChange={handleClick} />
+      <MathJax src={renderGrammar(allGrammars[props.index][state])} options={{ display: true }} />
     </>
   );
 };
 
 const Grammar: React.FC = () => {
-  const context = useContext(AppContext);
-
-  const JsonPanel = <JsonTree data={context.allGrammars} theme={theme} />;
-
+  const allGrammars = useSelector<RootState, LabeledTree[][][]>((state)=>state.allGrammars)
   return (
     <Tabs className="window" defaulTarget="visualize">
       <div className="title-bar">
@@ -78,12 +74,12 @@ const Grammar: React.FC = () => {
           </Tab>
         </TabList>
         <TabPanel role="tabpanel" title="visualize">
-          {context.allGrammars.map((g, index) => (
+          {allGrammars.map((g, index) => (
             <Selector key={JSON.stringify(g)} index={index} />
           ))}
         </TabPanel>
         <TabPanel role="tabpanel" title="json">
-          {JsonPanel}
+          <JsonTree data={allGrammars} theme={theme} />
         </TabPanel>
       </div>
     </Tabs>

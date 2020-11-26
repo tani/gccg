@@ -19,7 +19,6 @@
     "react-dom": "17.0.1",
     "react-grid-layout": "^1.2.0",
     "react-json-tree": "^0.13.0",
-    "react-numeric-input": "^2.2.3",
     "react-redux": "^7.2.2",
     "uuid": "^8.3.1",
     "xp.css": "^0.2.3"
@@ -28,7 +27,6 @@
     "@types/node": "^14.14.9",
     "@types/react": "^17.0.0",
     "@types/react-grid-layout": "^1.1.1",
-    "@types/react-numeric-input": "^2.2.3",
     "@types/react-redux": "^7.1.11",
     "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "^4.8.1",

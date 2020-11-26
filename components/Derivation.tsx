@@ -1,8 +1,9 @@
 import dynamic from "next/dynamic";
-import React, { useContext } from "react";
+import React from "react";
 import JsonTree from "react-json-tree";
+import { useSelector } from "react-redux";
 import { LabeledLabelTree, LabeledTree } from "../lib/labeled_tree";
-import { AppContext } from "../lib/store";
+import { RootState } from "../lib/slice";
 import theme from "../lib/theme";
 import { Tab, Tabs, TabList, TabPanel } from "./TabWindow";
 const MathJax = dynamic(() => import("./MathJax"), { ssr: false });
@@ -40,7 +41,7 @@ function renderMathJaxDerivation(tree: LabeledTree): string {
 }
 
 const Window: React.FC = () => {
-  const context = useContext(AppContext);
+  const derivations = useSelector<RootState, LabeledTree[][]>((state)=>state.derivations)
   return (
     <Tabs className="window" defaulTarget="visualize">
       <div className="title-bar">
@@ -56,14 +57,14 @@ const Window: React.FC = () => {
           </Tab>
         </TabList>
         <TabPanel role="tabpanel" title="visualize">
-          {[].concat(...context.derivations).map((derivation) => {
+          {[].concat(...derivations).map((derivation) => {
             const src = "\\begin{prooftree}" + renderMathJaxDerivation(derivation) + "\\end{prooftree}";
             const options = { display: true };
             return <MathJax src={src} key={src} options={options} />;
           })}
         </TabPanel>
         <TabPanel role="tabpanel" title="json">
-          <JsonTree data={context.grammars} theme={theme} />
+          <JsonTree data={derivations} theme={theme} />
         </TabPanel>
       </div>
     </Tabs>
