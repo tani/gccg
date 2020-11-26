@@ -1,5 +1,5 @@
 import dynamic from "next/dynamic";
-import React from "react";
+import React, { useState } from "react";
 import JsonTree from "react-json-tree";
 import { useSelector } from "react-redux";
 import { LabeledLabelTree, LabeledTree } from "../lib/labeled_tree";
@@ -42,12 +42,13 @@ function renderMathJaxDerivation(tree: LabeledTree): string {
 
 const Window: React.FC = () => {
   const derivations = useSelector<RootState, LabeledTree[][]>((state)=>state.derivations)
+  const [state, setState] = useState("medium")
   return (
     <Tabs className="window" defaulTarget="visualize">
       <div className="title-bar">
         <div className="title-bar-text">CCG Derivations</div>
       </div>
-      <div className="window-body">
+      <div className="window-body" style={{fontSize: state}}>
         <TabList role="tablist">
           <Tab role="tab" target="visualize">
             Visualize
@@ -55,16 +56,32 @@ const Window: React.FC = () => {
           <Tab role="tab" target="json">
             JSON
           </Tab>
+          <Tab role="tab" target="configuration">
+            Configuration
+          </Tab>
         </TabList>
         <TabPanel role="tabpanel" title="visualize">
-          {[].concat(...derivations).map((derivation) => {
-            const src = "\\begin{prooftree}" + renderMathJaxDerivation(derivation) + "\\end{prooftree}";
+          {derivations.map((derivations, index) => {
+            const src = derivations.map(derivation=>"\\begin{prooftree}" + renderMathJaxDerivation(derivation) + "\\end{prooftree}").join("\\\\")
             const options = { display: true };
-            return <MathJax src={src} key={src} options={options} />;
+            return (
+              <div key={src}>
+              <p>Sentence {index}</p>
+              <MathJax src={`\\displaylines{${src}}`} options={options} />
+              </div>
+            )
           })}
         </TabPanel>
         <TabPanel role="tabpanel" title="json">
           <JsonTree data={derivations} theme={theme} />
+        </TabPanel>
+        <TabPanel role="tabpanel" title="configuration">
+          <label htmlFor="font-size" style={{ marginRight: 10 }}>Font size</label>
+          <select name="font-size" onChange={(e)=>{setState(e.target.value)}}>
+            {["xx-small", "x-small", "small", "medium", "large", "x-large", "xx-large"].map(scale=>(
+              <option key={scale} value={scale}>{scale}</option>
+            ))}
+          </select>
         </TabPanel>
       </div>
     </Tabs>
