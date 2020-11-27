@@ -29,3 +29,7 @@ textarea {
   height: calc(100% - 95px);
   overflow: auto;
 }
+
+label {
+  margin-right: 10px;
+}
