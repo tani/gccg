@@ -44,7 +44,7 @@ export const TabWindow: React.FC<{ title: string; data: unknown }> = (props) => 
   return (
     <div className="window">
       <div className="title-bar">
-        <div className="titleb-bar-text">{props.title}</div>
+        <div className="title-bar-text">{props.title}</div>
       </div>
       <Tabs defaulTarget="main" style={style} className="window-body">
         <TabList role="tablist">
